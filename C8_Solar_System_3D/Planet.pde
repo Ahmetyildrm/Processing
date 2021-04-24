@@ -6,72 +6,83 @@ class Planet {
   float orbitspeed;
   color c; 
   Planet[] planets;
-  float X = this.distance * cos(this.angle);
-  float Y = this.distance * sin(this.angle);
+  PVector v;
+  PShape globe;
 
-  Planet(float r, float d, color c, float orbitspeed) {
+  Planet(float r, float d, color c, float orbitspeed, PImage img) {
+    this.v = PVector.random3D();
     this.radius = r;
     this.distance = d;
+    v.mult(distance);
     this.angle = random(TWO_PI);
     this.orbitspeed = orbitspeed; 
     this.c = c;
+    noStroke();
+    noFill();
+    this.globe = createShape(SPHERE, this.radius);
+    globe.setTexture(img);
   }
 
-  Planet(float r, float d) {
+  Planet(float r, float d, PImage img) {
+    this.v = PVector.random3D();
     this.radius = r;
     this.distance = d;
+    v.mult(distance);
     this.angle = random(TWO_PI);
     this.c = color(random(255), random(255), random(255));
-    this.orbitspeed = random(0.005, 0.01);
+    this.orbitspeed = random(0.0005, 0.01);
+    noStroke();
+    noFill();
+    this.globe = createShape(SPHERE, this.radius);
+    globe.setTexture(img);
   }
 
   void orbit() {
     angle += orbitspeed; 
-    //if (this.planets != null) {
-    //   for (int i = 0; i<this.planets.length; i++) {        
-    //     this.planets[i].orbit();
-    //   }
-    // }
+    if (planets != null) {
+      for (int i = 0; i < planets.length; i++) {
+        planets[i].orbit();
+      }
+    }
   }
 
   void spawnMoons(int total, int level) {
     planets = new Planet[total];
     for (int i = 0; i<planets.length; i++) {
-      float newR = random(this.radius*0.3, this.radius*0.5);
+      float newR = random(this.radius*0.2, this.radius*0.5);
       float newD = random(1.1*(this.radius + newR), 2*(this.radius + newR)); 
-      planets[i] = new Planet(newR, newD);
+      int textureNo = int(random(0, 4));
+      planets[i] = new Planet(newR, newD, textures[textureNo]);
       if (level < 2) {
-        int num = int(random(1, 3));
+        int num = int(random(1, 2));
         planets[i].spawnMoons(num, level + 1);
       }
     }
   }
 
   void show() {   
-    pushMatrix();    
-    rotate(this.angle);
-    this.orbit();
-    translate(this.distance, 0);
-    fill(this.c, 200);
+    pushMatrix(); 
+    PVector v2 = new PVector(1, 0, 0);
+    PVector p = v.cross(v2);    
+    
+    rotate(this.angle, p.x, p.y, p.z);
+    line(0, 0, 0, this.v.x, this.v.y, this.v.z); 
+    
+  
+    translate(v.x, v.y, v.z);
+    fill(this.c);
     noStroke();
-    ellipse(0, 0, this.radius*2, this.radius*2);
-    fill(255);
-    ellipse(0, 0, 3, 3);
+    shape(this.globe);
+    
     if (this.planets != null) {
       for (int i = 0; i<this.planets.length; i++) {          
         strokeWeight(2);
         stroke(planets[i].c, 100);
-        //float planetD = planets[i].distance;
-        //float planetX = planetD * cos(planets[i].angle);
-        //float planetY = planetD * sin(planets[i].angle);
-        //line(0, 0, planets[i].X, planets[i].Y);
-        this.planets[i].show();
-        noFill();
-        stroke(255, 100);
-        circle(this.X, this.Y, 2*planets[i].distance);        
+        this.planets[i].show();      
       }
     }
     popMatrix();
+    this.orbit();
   }
   
 }
